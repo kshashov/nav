@@ -2,6 +2,9 @@ import * as hmUI from "@zos/ui";
 import { log as Logger } from "@zos/utils";
 import { TEXT_STYLE } from "zosLoader:./index.page.[pf].layout.js";
 import { Geolocation } from '@zos/sensor'
+import { onGesture, GESTURE_UP, GESTURE_RIGHT, showToast } from '@zos/interaction'
+import { getDeviceInfo } from "@zos/device";
+
 
 const logger = Logger.getLogger("helloworld");
 Page({
@@ -17,13 +20,14 @@ Page({
     input: {
       offsetTop: 0,
       offsetLeft: 0,
-      scale: 1
+      scale: 1.5
     },
     location: {
       x: 50.0928,
       y: 53.1881,
       status: 'A'
     },
+    offset: 50,
     firstLocation: true,
     canvas: null,
     geolocation: null,
@@ -49,6 +53,59 @@ Page({
       h: 480
     })
 
+    onGesture({
+      callback: (event) => {
+        if (event === GESTURE_UP) {
+          this.state.input.offsetTop--
+          this.onTileUpdate()
+        } else if (event === GESTURE_DOWN) {
+          this.state.input.offsetTop++
+          this.onTileUpdate()
+        } else if (event === GESTURE_LEFT) {
+          this.state.input.offsetLeft--
+          this.onTileUpdate()
+        } else if (event === GESTURE_RIGHT) {
+          this.state.input.offsetLeft++
+          this.onTileUpdate()
+        }
+        return true
+      },
+    })
+
+    hmUI.createWidget(hmUI.widget.BUTTON, {
+      x: 0,
+      y: 0,
+      w: 50,
+      h: 50,
+      text: '+',
+      color: 0xff0000,
+      normal_color: 0xffffffff,
+      press_color: 0x00ffffff,
+      click_func: (button_widget) => {
+        if (this.state.input.scale < 10) {
+          this.state.input.scale += 0.3
+          this.onTileUpdate()
+        }
+      }
+    })
+
+    hmUI.createWidget(hmUI.widget.BUTTON, {
+      x: 50,
+      y: 0,
+      w: 50,
+      h: 50,
+      text: '-',
+      color: 0xff0000,
+      normal_color: 0xffffffff,
+      press_color: 0x00ffffff,
+      click_func: (button_widget) => {
+        if (this.state.input.scale > 0.3) {
+          this.state.input.scale -= 0.3
+          this.onTileUpdate()
+        }
+      }
+    })
+
     hmUI.createWidget(hmUI.widget.BUTTON, {
       x: 480 - 30,
       y: 225,
@@ -59,7 +116,7 @@ Page({
       normal_color: 0xffffffff,
       press_color: 0x00ffffff,
       click_func: (button_widget) => {
-        this.state.input.offsetLeft -= 50
+        this.state.input.offsetLeft--
         this.onTileUpdate()
       }
     })
@@ -74,7 +131,7 @@ Page({
       normal_color: 0xffffffff,
       press_color: 0x00ffffff,
       click_func: (button_widget) => {
-        this.state.input.offsetLeft += 50
+        this.state.input.offsetLeft++
         this.onTileUpdate()
       }
     })
@@ -89,7 +146,7 @@ Page({
       normal_color: 0xffffffff,
       press_color: 0x00ffffff,
       click_func: (button_widget) => {
-        this.state.input.offsetTop += 50
+        this.state.input.offsetTop++
         this.onTileUpdate()
       }
     })
@@ -104,7 +161,7 @@ Page({
       normal_color: 0xffffffff,
       press_color: 0x00ffffff,
       click_func: (button_widget) => {
-        this.state.input.offsetTop -= 50
+        this.state.input.offsetTop--
         this.onTileUpdate()
       }
     })
@@ -119,14 +176,16 @@ Page({
     this.renderTile()
 
     this.state.geolocation.onChange(() => {
+      const {location} = this.state
+
       if (this.state.geolocation.getStatus() === 'A') {
-        this.state.location.x =  this.state.geolocation.getLongitude()
-        this.state.location.y =  this.state.geolocation.getLatitude()
-        this.state.location.status = this.state.geolocation.getStatus()
+        location.x =  this.state.geolocation.getLongitude()
+        location.y =  this.state.geolocation.getLatitude()
+        location.status = this.state.geolocation.getStatus()
 
         if (this.state.firstLocation) {
           this.state.firstLocation = false
-          this.renderLocation(this.state.location.x, this.state.location.y)
+          this.renderLocation(location.x, location.y)
         }
       }
     })
@@ -147,7 +206,7 @@ Page({
   renderTile() {
     const {width, height} = this.state.tile
     const {offsetLeft, offsetTop, scale} = this.state.input
-    const canvas = this.state.canvas
+    const {canvas, offset} = this.state
 
     // TODO check if the current position in bounds
     // otherwise get a new tile for the currect position
@@ -169,10 +228,10 @@ Page({
     })
 
     canvas.drawImage({
-      x: offsetLeft,
-      y: offsetTop,
-      w: width,
-      h: height,
+      x: offsetLeft*scale*offset,
+      y: offsetTop*scale*offset,
+      w: width*scale,
+      h: height*scale,
       // alpha: 255,
       image: 'image/map0.png'
     })
@@ -182,7 +241,7 @@ Page({
   renderLocation(x, y) {
     const {width, height, left, top, bottom, right} = this.state.tile
     const {offsetLeft, offsetTop, scale} = this.state.input
-    const {canvas, location} = this.state
+    const {canvas, location, offset} = this.state
 
     if (location.status != 'A') {
       logger.debug("skip location with status" + location.status);
@@ -203,12 +262,12 @@ Page({
     const latPosition = Math.abs(top - y)
     const longPosition = Math.abs(left - x)
 
-    x = width*longPosition/longWidth
-    y = height*latPosition/latHeight
+    x = width*scale*longPosition/longWidth
+    y = height*scale*latPosition/latHeight
 
     canvas.drawCircle({
-      center_x: x + offsetLeft,
-      center_y: y + offsetTop,
+      center_x: x + offsetLeft*scale*offset,
+      center_y: y + offsetTop*scale*offset,
       radius: 5,
       color: 0xff0000
     })
