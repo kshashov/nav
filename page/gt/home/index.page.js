@@ -20,7 +20,7 @@ Page({
     input: {
       offsetTop: 0,
       offsetLeft: 0,
-      scale: 1.5
+      scale: 2
     },
     location: {
       x: 50.0928,
@@ -40,7 +40,9 @@ Page({
     this.state.geolocation.start()
 
     this.state.intervalId = setInterval(() => {
-      this.onTimer()
+      if (!this.state.firstLocation) {
+        this.onTimer()
+      }
     }, 5*1000)
   },
   build() {
@@ -73,8 +75,22 @@ Page({
     })
 
     hmUI.createWidget(hmUI.widget.BUTTON, {
-      x: 0,
-      y: 0,
+      x: 480-100,
+      y: 480-150,
+      w: 50,
+      h: 50,
+      text: 'c',
+      color: 0xff0000,
+      normal_color: 0xffffffff,
+      press_color: 0x00ffffff,
+      click_func: (button_widget) => {
+        this.onCenter( 50.0928, 53.1881)
+      }
+    })
+
+    hmUI.createWidget(hmUI.widget.BUTTON, {
+      x: 50,
+      y: 100,
       w: 50,
       h: 50,
       text: '+',
@@ -90,8 +106,8 @@ Page({
     })
 
     hmUI.createWidget(hmUI.widget.BUTTON, {
-      x: 50,
-      y: 0,
+      x: 100,
+      y: 100,
       w: 50,
       h: 50,
       text: '-',
@@ -180,7 +196,7 @@ Page({
 
       if (this.state.geolocation.getStatus() === 'A') {
         location.x =  this.state.geolocation.getLongitude()
-        location.y =  this.state.geolocation.getLatitude()
+        location.y = this.state.geolocation.getLatitude()
         location.status = this.state.geolocation.getStatus()
 
         if (this.state.firstLocation) {
@@ -271,6 +287,39 @@ Page({
       radius: 5,
       color: 0xff0000
     })
+
+  },
+  onCenter() {
+      const {width, height, left, top, bottom, right} = this.state.tile
+      const {offsetLeft, offsetTop, scale} = this.state.input
+      const {canvas, location, offset} = this.state
+      var x = location.x
+      var y = location.y
+  
+      if (location.status != 'A') {
+        logger.debug("skip location with status" + location.status);
+        return
+      }
+  
+      // TODO check if the current position in bounds 
+      // otherwise if user did not move map away - get a new tile for the current position
+      // otherwise do not show location and print message
+  
+      const longWidth = Math.abs(right - left)
+      const latHeight = Math.abs(top - bottom)
+  
+      const latPosition = Math.abs(top - y)
+      const longPosition = Math.abs(left - x)
+  
+      x = width*scale*longPosition/longWidth //+ offsetLeft*scale*offset
+      y = height*scale*latPosition/latHeight //+ offsetTop*scale*offset
+
+      const newTop = y - 240
+      const newLeft = x - 240
+      this.state.input.offsetLeft = -Math.floor(newLeft/(offset*scale))
+      this.state.input.offsetTop = -Math.floor(newTop/(offset*scale))
+
+      this.onTileUpdate()
 
   },
   onDestroy() {
