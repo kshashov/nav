@@ -4,23 +4,18 @@ import { TEXT_STYLE } from "zosLoader:./index.page.[pf].layout.js";
 import { Geolocation } from '@zos/sensor'
 import { onGesture, GESTURE_UP, GESTURE_RIGHT, showToast } from '@zos/interaction'
 import { getDeviceInfo } from "@zos/device";
+import MapRenderer from "./maprenderer";
+import TilesManager from "./tiles/tiles-manager";
 
 
 const logger = Logger.getLogger("helloworld");
 Page({
   state: {
-    tile: {
-      top: 53.2095,
-      left: 50.0824,
-      bottom: 53.1633,
-      right: 50.1956,
-      width: 1318,
-      height: 896
-    },
+    tile: null,
     input: {
       offsetTop: 0,
       offsetLeft: 0,
-      scale: 2
+      scale: 1
     },
     location: {
       x: 50.0928,
@@ -31,7 +26,9 @@ Page({
     firstLocation: true,
     canvas: null,
     geolocation: null,
-    text: null
+    text: null,
+    mapRenderer: null,
+    tilesManager: new TilesManager()
   },
   onInit() {
     logger.debug("page onInit invoked");
@@ -189,6 +186,8 @@ Page({
     //   line_width: 10
     // })
 
+    this.state.mapRenderer = new MapRenderer(this.state.canvas, 480, 480, this.state.offset)
+
     this.renderTile()
 
     this.state.geolocation.onChange(() => {
@@ -201,7 +200,7 @@ Page({
 
         if (this.state.firstLocation) {
           this.state.firstLocation = false
-          this.renderLocation(location.x, location.y)
+          // this.renderLocation(location.x, location.y)
         }
       }
     })
@@ -210,47 +209,23 @@ Page({
     const {location} = this.state
 
     this.renderTile()
-    this.renderLocation(location.x, location.y)
+    // this.renderLocation(location.x, location.y)
   },
   onTileUpdate() {
     const {location} = this.state
 
 
     this.renderTile()
-    this.renderLocation(location.x, location.y)
+    // this.renderLocation(location.x, location.y)
   },
   renderTile() {
-    const {width, height} = this.state.tile
     const {offsetLeft, offsetTop, scale} = this.state.input
-    const {canvas, offset} = this.state
 
     // TODO check if the current position in bounds
     // otherwise get a new tile for the currect position
     // otherwise show current tile
 
-    canvas.clear({
-      x: 0,
-      y: 0,
-      width: 480,
-      height: 480
-    });
-
-    canvas.drawRect({
-      x1: 0,
-      y1: 0,
-      x2: 480,
-      y2: 480,
-      color: 0x000000
-    })
-
-    canvas.drawImage({
-      x: offsetLeft*scale*offset,
-      y: offsetTop*scale*offset,
-      w: width*scale,
-      h: height*scale,
-      // alpha: 255,
-      image: 'image/map0.png'
-    })
+    this.state.mapRenderer.render(offsetTop, offsetLeft, scale)
 
     // TODO check if other tiles should be displayed
   },
