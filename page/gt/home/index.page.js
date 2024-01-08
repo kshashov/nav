@@ -11,17 +11,22 @@ import TilesManager from "./tiles/tiles-manager";
 const logger = Logger.getLogger("helloworld");
 Page({
   state: {
-    tile: null,
     input: {
       offsetTop: 0,
       offsetLeft: 0,
       scale: 1
     },
     location: {
-      x: 50.0928,
-      y: 53.1881,
+      // x: 50.0883,
+      // y: 53.186,
+      // x: 50.1261,
+      // y: 53.2031,
+      x: 50.09317,
+      y: 53.18978,
+      // x: 50.126901,
+      // y: 53.168001,
       status: 'A'
-    },
+    },  
     offset: 50,
     firstLocation: true,
     canvas: null,
@@ -97,7 +102,7 @@ Page({
       normal_color: 0xffffffff,
       press_color: 0x00ffffff,
       click_func: (button_widget) => {
-        if (this.state.input.scale < 10) {
+        if (this.state.input.scale) {
           this.state.input.scale += 0.3
           this.onTileUpdate()
         }
@@ -124,7 +129,7 @@ Page({
     hmUI.createWidget(hmUI.widget.BUTTON, {
       x: 480 - 30,
       y: 225,
-      w: 30,
+      w: 30, 
       h: 30,
       text: '→',
       color: 0xff0000,
@@ -194,16 +199,16 @@ Page({
 
     this.state.geolocation.onChange(() => {
       const {location} = this.state
-
+ 
       if (this.state.geolocation.getStatus() === 'A') {
         // location.x =  this.state.geolocation.getLongitude()
-        // location.y = this.state.geolocation.getLatitude()
+        // location.y = this.state.geolocation.getLatitude() 
         location.status = this.state.geolocation.getStatus()
 
         if (this.state.firstLocation) {
           this.state.firstLocation = false
-          this.onCenter()
-          // this.renderLocation(location.x, location.y)
+          // this.onCenter()
+          this.renderLocation(location.x, location.y)
         }
       }
     })
@@ -256,6 +261,10 @@ Page({
     x = width*scale*longPosition/longWidth
     y = height*scale*latPosition/latHeight
 
+    // showToast({content: "offset " + offsetLeft + " "+ offsetTop})
+    // showToast({content: "offset " + offsetLeft + " "+ offsetTop})
+    // showToast({content: "location " + x + " " + y})
+
     canvas.drawCircle({
       center_x: x + offsetLeft*scale*offset,
       center_y: y + offsetTop*scale*offset,
@@ -289,7 +298,7 @@ Page({
       x = width*scale*longPosition/longWidth //+ offsetLeft*scale*offset
       y = height*scale*latPosition/latHeight //+ offsetTop*scale*offset
 
-      showToast({content: y + "for " + height*scale}) 
+      // showToast({content: y + "for " + height*scale}) 
 
       const newTop = y - 240
       const newLeft = x - 240

@@ -17,7 +17,7 @@ export default class MapRenderer {
 
     render(offsetTop, offsetLeft, scale) {
   
-        // clear
+        clear
         this.canvas.clear({
             x: 0,
             y: 0,
@@ -37,7 +37,7 @@ export default class MapRenderer {
         const y = offsetTop * this.offsetPx * scale;
 
         // find any tile in the current offset window without scaling for simplicity
-        let tile = this.tilesManager.findTileForPx(-x, -y, -x + 480, -y + 480)
+        let tile = this.tilesManager.findTileForPx(-x, -y, -x + this.widthPx, -y + this.heightPx)
 
         if (tile) {
             // showToast({content: "tile: " + tile.x + " " + tile.y})
@@ -60,6 +60,28 @@ export default class MapRenderer {
             image: tile.image
           });
 
+
+
+            // this.canvas.setPaint({
+            // color: 0xffffff,
+            // line_width: 10
+            // })
+
+          this.canvas.drawLine({
+            x1: x,
+            y1: y,
+            x2: x,
+            y2: y + height,
+            color: 0xff0000
+          });
+
+          this.canvas.drawLine({
+            x1: x,
+            y1: y,
+            x2: x + width,
+            y2: y,
+            color: 0xff0000
+          });
 
           if (checkTop) {
             if (y > 0) { // empty space on top on the current tile 
