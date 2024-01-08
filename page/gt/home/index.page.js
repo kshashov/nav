@@ -2,7 +2,7 @@ import * as hmUI from "@zos/ui";
 import { log as Logger } from "@zos/utils";
 import { TEXT_STYLE } from "zosLoader:./index.page.[pf].layout.js";
 import { Geolocation } from '@zos/sensor'
-import { onGesture, GESTURE_UP, GESTURE_RIGHT, showToast } from '@zos/interaction'
+import { onGesture, GESTURE_UP, GESTURE_RIGHT, GESTURE_DOWN, GESTURE_LEFT, showToast } from '@zos/interaction'
 import { getDeviceInfo } from "@zos/device";
 import MapRenderer from "./maprenderer";
 import TilesManager from "./tiles/tiles-manager";
@@ -35,6 +35,8 @@ Page({
 
     this.state.geolocation = new Geolocation()
     this.state.geolocation.start()
+
+    this.state.map = this.state.tilesManager.map;
 
     this.state.intervalId = setInterval(() => {
       if (!this.state.firstLocation) {
@@ -194,12 +196,13 @@ Page({
       const {location} = this.state
 
       if (this.state.geolocation.getStatus() === 'A') {
-        location.x =  this.state.geolocation.getLongitude()
-        location.y = this.state.geolocation.getLatitude()
+        // location.x =  this.state.geolocation.getLongitude()
+        // location.y = this.state.geolocation.getLatitude()
         location.status = this.state.geolocation.getStatus()
 
         if (this.state.firstLocation) {
           this.state.firstLocation = false
+          this.onCenter()
           // this.renderLocation(location.x, location.y)
         }
       }
@@ -209,14 +212,14 @@ Page({
     const {location} = this.state
 
     this.renderTile()
-    // this.renderLocation(location.x, location.y)
+    this.renderLocation(location.x, location.y)
   },
   onTileUpdate() {
     const {location} = this.state
 
 
     this.renderTile()
-    // this.renderLocation(location.x, location.y)
+    this.renderLocation(location.x, location.y)
   },
   renderTile() {
     const {offsetLeft, offsetTop, scale} = this.state.input
@@ -230,7 +233,7 @@ Page({
     // TODO check if other tiles should be displayed
   },
   renderLocation(x, y) {
-    const {width, height, left, top, bottom, right} = this.state.tile
+    const {width, height, left, top, bottom, right, longWidth, latHeight} = this.state.map
     const {offsetLeft, offsetTop, scale} = this.state.input
     const {canvas, location, offset} = this.state
 
@@ -239,16 +242,13 @@ Page({
       return
     }
 
-    this.state.text.setProperty(hmUI.prop.MORE, {
+    this.state.text.setProperty(hmUI.prop.MORE, { 
       text: location.x + " " + location.y
     })
 
     // TODO check if the current position in bounds 
     // otherwise if user did not move map away - get a new tile for the current position
     // otherwise do not show location and print message
-
-    const longWidth = Math.abs(right - left)
-    const latHeight = Math.abs(top - bottom)
 
     const latPosition = Math.abs(top - y)
     const longPosition = Math.abs(left - x)
@@ -265,7 +265,7 @@ Page({
 
   },
   onCenter() {
-      const {width, height, left, top, bottom, right} = this.state.tile
+      const {width, height, left, top, bottom, right, longWidth, latHeight} = this.state.map
       const {offsetLeft, offsetTop, scale} = this.state.input
       const {canvas, location, offset} = this.state
       var x = location.x
@@ -280,8 +280,8 @@ Page({
       // otherwise if user did not move map away - get a new tile for the current position
       // otherwise do not show location and print message
   
-      const longWidth = Math.abs(right - left)
-      const latHeight = Math.abs(top - bottom)
+      // const longWidth = Math.abs(right - left)
+      // const latHeight = Math.abs(top - bottom)
   
       const latPosition = Math.abs(top - y)
       const longPosition = Math.abs(left - x)
@@ -289,10 +289,14 @@ Page({
       x = width*scale*longPosition/longWidth //+ offsetLeft*scale*offset
       y = height*scale*latPosition/latHeight //+ offsetTop*scale*offset
 
+      showToast({content: y + "for " + height*scale}) 
+
       const newTop = y - 240
       const newLeft = x - 240
       this.state.input.offsetLeft = -Math.floor(newLeft/(offset*scale))
       this.state.input.offsetTop = -Math.floor(newTop/(offset*scale))
+
+      // showToast({content:  this.state.input.offsetLeft  + ' ' + this.state.input.offsetTop});
 
       this.onTileUpdate()
 

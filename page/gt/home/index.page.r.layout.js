@@ -11,7 +11,7 @@ export const TEXT_STYLE = {
   y: px(200),
   w: DEVICE_WIDTH - px(42) * 2,
   h: px(100),
-  color: 0x000000,
+  color: 0xFF0000,
   text_size: px(26),
   align_h: hmUI.align.CENTER_H,
   align_v: hmUI.align.CENTER_V,

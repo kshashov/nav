@@ -33,15 +33,15 @@ export default class MapRenderer {
             color: 0x000000
           });
       
-        const x = offsetLeft * this.offsetPx;
-        const y = offsetTop * this.offsetPx;
+        const x = offsetLeft * this.offsetPx * scale;
+        const y = offsetTop * this.offsetPx * scale;
 
         // find any tile in the current offset window without scaling for simplicity
-        let tile = this.tilesManager.findTileForPx(-x, -y, -x+480, -y+480)
+        let tile = this.tilesManager.findTileForPx(-x, -y, -x + 480, -y + 480)
 
         if (tile) {
             // showToast({content: "tile: " + tile.x + " " + tile.y})
-            this.renderTile(tile, x * scale + tile.x*tile.width*scale, y * scale + tile.y*tile.height*scale, scale, true, true, true, true);
+            this.renderTile(tile, x + tile.x*tile.width*scale, y + tile.y*tile.height*scale, scale, true, true, true, true);
         }
 
     }

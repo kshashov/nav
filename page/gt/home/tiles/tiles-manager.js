@@ -1,25 +1,32 @@
 import Tile from "./tile"
 import { showToast } from '@zos/interaction'
 
+// https://render.openstreetmap.org/cgi-bin/export?bbox=50.0824,53.1633,50.1956,53.2095&scale=20000&format=png
+
 export default class TilesManager {
     tiles = [];
     rows = 13;
     columns = 13;
+    map = {
+        top: 53.2095,
+        left: 50.0824,
+        bottom: 53.1633,
+        right: 50.1956,
+        width: 1318*10,
+        height: 896*10,
+        longWidth: null,
+        latHeight: null
+    };
 
     constructor() {
-        const top = 53.2095;
-        const left = 50.0824;
-        const bottom = 53.1633;
-        const right= 50.1956;
-        const longWidth = Math.abs(right - left);
-        const latHeight = Math.abs(top - bottom);
-        const width = 1318*10;
-        const height = 896*10;
+        this.map.longWidth = Math.abs(this.map.right - this.map.left);
+        this.map.latHeight = Math.abs(this.map.top - this.map.bottom);
 
-        let tileHeight = height/this.rows;
-        let tileWidth = width/this.columns;
-        let tileLongWight = longWidth/this.rows;
-        let tileLatHeight = latHeight/this.columns;
+
+        let tileHeight = this.map.height/this.rows;
+        let tileWidth = this.map.width/this.columns;
+        let tileLongWight = this.map.longWidth/this.rows;
+        let tileLatHeight = this.map.latHeight/this.columns;
     
         for (let i = 0; i < this.rows; i++) {
             let columns = []
@@ -62,7 +69,7 @@ export default class TilesManager {
             currentY += this.tiles[i][0].height
             test = i;
         }
-        showToast({content: ' ' + test});
+        // showToast({content: 'no tiles for ' + x + " " + y});
         return null
     }
 
