@@ -202,13 +202,13 @@ Page({
  
       if (this.state.geolocation.getStatus() === 'A') {
         // location.x =  this.state.geolocation.getLongitude()
-        // location.y = this.state.geolocation.getLatitude() 
+        // location.y = this.state.geolocation.getLatitude()  
         location.status = this.state.geolocation.getStatus()
 
         if (this.state.firstLocation) {
           this.state.firstLocation = false
-          // this.onCenter()
-          this.renderLocation(location.x, location.y)
+          this.onCenter()
+          // this.renderLocation(location.x, location.y)
         }
       }
     })
@@ -238,7 +238,7 @@ Page({
     // TODO check if other tiles should be displayed
   },
   renderLocation(x, y) {
-    const {width, height, left, top, bottom, right, longWidth, latHeight} = this.state.map
+    const {grid} = this.state.map
     const {offsetLeft, offsetTop, scale} = this.state.input
     const {canvas, location, offset} = this.state
 
@@ -255,15 +255,11 @@ Page({
     // otherwise if user did not move map away - get a new tile for the current position
     // otherwise do not show location and print message
 
-    const latPosition = Math.abs(top - y)
-    const longPosition = Math.abs(left - x)
+    const latPosition = Math.abs(grid.top - y)
+    const longPosition = Math.abs(grid.left - x)
 
-    x = width*scale*longPosition/longWidth
-    y = height*scale*latPosition/latHeight
-
-    // showToast({content: "offset " + offsetLeft + " "+ offsetTop})
-    // showToast({content: "offset " + offsetLeft + " "+ offsetTop})
-    // showToast({content: "location " + x + " " + y})
+    x = this.state.tilesManager.getMapWidth(scale)*longPosition/grid.longWidth
+    y = this.state.tilesManager.getMapHeight(scale)*latPosition/grid.latHeight
 
     canvas.drawCircle({
       center_x: x + offsetLeft*scale*offset,
@@ -274,38 +270,29 @@ Page({
 
   },
   onCenter() {
-      const {width, height, left, top, bottom, right, longWidth, latHeight} = this.state.map
-      const {offsetLeft, offsetTop, scale} = this.state.input
-      const {canvas, location, offset} = this.state
+      const {grid} = this.state.map
+      const {scale} = this.state.input
+      const {location, offset} = this.state
       var x = location.x
       var y = location.y
   
+      // TODO check if in bounds otherwise do nothing
+
       if (location.status != 'A') {
         logger.debug("skip location with status" + location.status);
         return
       }
   
-      // TODO check if the current position in bounds 
-      // otherwise if user did not move map away - get a new tile for the current position
-      // otherwise do not show location and print message
+      const latPosition = Math.abs(grid.top - y)
+      const longPosition = Math.abs(grid.left - x)
   
-      // const longWidth = Math.abs(right - left)
-      // const latHeight = Math.abs(top - bottom)
-  
-      const latPosition = Math.abs(top - y)
-      const longPosition = Math.abs(left - x)
-  
-      x = width*scale*longPosition/longWidth //+ offsetLeft*scale*offset
-      y = height*scale*latPosition/latHeight //+ offsetTop*scale*offset
-
-      // showToast({content: y + "for " + height*scale}) 
+      x = this.state.tilesManager.getMapWidth(scale)*longPosition/grid.longWidth
+      y = this.state.tilesManager.getMapHeight(scale)*latPosition/grid.latHeight
 
       const newTop = y - 240
       const newLeft = x - 240
       this.state.input.offsetLeft = -Math.floor(newLeft/(offset*scale))
       this.state.input.offsetTop = -Math.floor(newTop/(offset*scale))
-
-      // showToast({content:  this.state.input.offsetLeft  + ' ' + this.state.input.offsetTop});
 
       this.onTileUpdate()
 

@@ -3,15 +3,15 @@ import { showToast } from '@zos/interaction'
 
 export default class MapRenderer {
     canvas = null;
-    widthPx = 480; // canvas
-    heightPx = 480; // canvas
+    windowWidth = 480; // canvas
+    windowHeight = 480; // canvas
     offsetPx = 50; // single offset step
     tilesManager = new TilesManager();
 
     constructor(canvas, width, height, offset) {
         this.canvas = canvas;
-        this.widthPx = width;
-        this.heightPx = height;
+        this.windowWidth = width;
+        this.windowHeight = height;
         this.offsetPx = offset;
     }
 
@@ -36,20 +36,25 @@ export default class MapRenderer {
         const x = offsetLeft * this.offsetPx * scale;
         const y = offsetTop * this.offsetPx * scale;
 
-        // find any tile in the current offset window without scaling for simplicity
-        let tile = this.tilesManager.findTileForPx(-x, -y, -x + this.widthPx, -y + this.heightPx)
+        // find any tile in the current offset window 
+        let tile = this.tilesManager.findTileForPx(-x, -y, -x + this.windowWidth, -y + this.windowHeight, scale)
 
         if (tile) {
-            // showToast({content: "tile: " + tile.x + " " + tile.y})
-            this.renderTile(tile, x + tile.x*tile.width*scale, y + tile.y*tile.height*scale, scale, true, true, true, true);
+            // showToast({content: "tile: " + tile.row + " " + tile.column})
+            this.renderTile(tile, 
+              x + tile.column * this.tilesManager.getTileWidth(scale), 
+              y + tile.row * this.tilesManager.getTileHeight(scale), 
+              scale, true, true, true, true);
         }
 
     }
 
     renderTile(tile, x, y, scale, checkTop, checkLeft, checkRight, checkBottom) {
 
-        const width = tile.width * scale;
-        const height = tile.height * scale;
+        const width = this.tilesManager.getTileWidth(scale);
+        const height = this.tilesManager.getTileHeight(scale);
+
+        // showToast({content: tile.image})
 
         this.canvas.drawImage({
             x: x,
@@ -58,7 +63,7 @@ export default class MapRenderer {
             h: height,
             // alpha: 255,
             image: tile.image
-          });
+          }); 
 
 
 
@@ -67,21 +72,21 @@ export default class MapRenderer {
             // line_width: 10
             // })
 
-          this.canvas.drawLine({
-            x1: x,
-            y1: y,
-            x2: x,
-            y2: y + height,
-            color: 0xff0000
-          });
+          // this.canvas.drawLine({
+          //   x1: x,
+          //   y1: y,
+          //   x2: x,
+          //   y2: y + height,
+          //   color: 0xff0000
+          // });
 
-          this.canvas.drawLine({
-            x1: x,
-            y1: y,
-            x2: x + width,
-            y2: y,
-            color: 0xff0000
-          });
+          // this.canvas.drawLine({
+          //   x1: x,
+          //   y1: y,
+          //   x2: x + width,
+          //   y2: y,
+          //   color: 0xff0000
+          // });
 
           if (checkTop) {
             if (y > 0) { // empty space on top on the current tile 
@@ -91,7 +96,7 @@ export default class MapRenderer {
                     // | |o| |
                     // | |x| |
                     // | | | |
-                    this.renderTile(topTile, x, y-height, scale, true, false, false, false)
+                    this.renderTile(topTile, x, y - height, scale, true, false, false, false)
                 }
             }   
           }
@@ -111,7 +116,7 @@ export default class MapRenderer {
 
           if (checkBottom) {
 
-            if ((y + height) < this.heightPx) { // empty space on bottom on the current tile 
+            if ((y + height) < this.windowHeight) { // empty space on bottom on the current tile 
                 let bottomTile = this.tilesManager.getBelow(tile); 
 
                 
@@ -126,7 +131,7 @@ export default class MapRenderer {
 
           if (checkRight) {
 
-            if ((x + width) < this.widthPx) { // empty space on right on the current tile 
+            if ((x + width) < this.windowWidth) { // empty space on right on the current tile 
                 let rightTile = this.tilesManager.getRight(tile); 
 
                 if (rightTile) {
