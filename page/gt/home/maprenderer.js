@@ -5,25 +5,22 @@ export default class MapRenderer {
     canvas = null;
     windowWidth = 480; // canvas
     windowHeight = 480; // canvas
-    offsetPx = 50; // single offset step
     tilesManager = new TilesManager();
 
-    constructor(canvas, width, height, offset) {
+    constructor(canvas, width, height) {
         this.canvas = canvas;
         this.windowWidth = width;
         this.windowHeight = height;
-        this.offsetPx = offset;
     }
 
     render(offsetTop, offsetLeft, scale) {
   
-        clear
-        this.canvas.clear({
-            x: 0,
-            y: 0,
-            width: 480,
-            height: 480
-          });
+        // this.canvas.clear({
+        //     x: 0,
+        //     y: 0,
+        //     width: 480,
+        //     height: 480
+        //   });
       
         this.canvas.drawRect({
             x1: 0,
@@ -33,8 +30,8 @@ export default class MapRenderer {
             color: 0x000000
           });
       
-        const x = offsetLeft * this.offsetPx * scale;
-        const y = offsetTop * this.offsetPx * scale;
+        const x = offsetLeft
+        const y = offsetTop
 
         // find any tile in the current offset window 
         let tile = this.tilesManager.findTileForPx(-x, -y, -x + this.windowWidth, -y + this.windowHeight, scale)
@@ -54,7 +51,7 @@ export default class MapRenderer {
         const width = this.tilesManager.getTileWidth(scale);
         const height = this.tilesManager.getTileHeight(scale);
 
-        // showToast({content: tile.image})
+        // showToast({content: x + " " + width})
 
         this.canvas.drawImage({
             x: x,
@@ -130,6 +127,8 @@ export default class MapRenderer {
           }
 
           if (checkRight) {
+
+            // showToast({content: x + " " + (x+width)})
 
             if ((x + width) < this.windowWidth) { // empty space on right on the current tile 
                 let rightTile = this.tilesManager.getRight(tile); 

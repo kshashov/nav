@@ -26,7 +26,7 @@ Page({
       // x: 50.126901,
       // y: 53.168001,
       status: 'A'
-    },  
+    },
     offset: 50,
     firstLocation: true,
     canvas: null,
@@ -47,11 +47,11 @@ Page({
       if (!this.state.firstLocation) {
         this.onTimer()
       }
-    }, 5*1000)
+    }, 5 * 1000)
   },
   build() {
     logger.debug("page build invoked");
-    // hmUI.createWidget(hmUI.widget.TEXT, TEXT_STYLE);
+
     this.state.canvas = hmUI.createWidget(hmUI.widget.CANVAS, {
       x: 0,
       y: 0,
@@ -59,19 +59,45 @@ Page({
       h: 480
     })
 
+    this.state.canvas.addEventListener(hmUI.event.MOVE, (info) => {
+      this.state.input.offsetLeft += Math.floor((info.x - this.state.input.pressX)) //diffX
+      this.state.input.offsetTop += Math.floor((info.y - this.state.input.pressY)) //diffY
+      this.state.input.pressX = info.x
+      this.state.input.pressY = info.y
+      this.onTileUpdate()
+
+    })
+
+    this.state.canvas.addEventListener(hmUI.event.CLICK_DOWN, (info) => {
+      this.state.input.pressX = info.x
+      this.state.input.pressY = info.y
+    })
+
+    this.state.canvas.addEventListener(hmUI.event.CLICK_DOWN, (info) => {
+      this.state.input.pressX = info.x
+      this.state.input.pressY = info.y
+    })
+
+
+    // this.state.canvas.addEventListener(hmUI.event.CLICK_UP, (info) => {
+    //   this.state.input.offsetLeft+=Math.floor((info.x - this.state.input.pressX)) //diffX
+    //   this.state.input.offsetTop+=Math.floor((info.y - this.state.input.pressY)) //diffY
+    //   this.onTileUpdate()
+    // })
+
     onGesture({
       callback: (event) => {
         if (event === GESTURE_UP) {
-          this.state.input.offsetTop--
+          this.state.input.offsetTop-=this.state.offset*this.state.input.scale
           this.onTileUpdate()
         } else if (event === GESTURE_DOWN) {
-          this.state.input.offsetTop++
+          this.state.input.offsetTop+=this.state.offset*this.state.input.scale
           this.onTileUpdate()
         } else if (event === GESTURE_LEFT) {
-          this.state.input.offsetLeft--
+          this.state.input.offsetLeft-=this.state.offset*this.state.input.scale
           this.onTileUpdate()
         } else if (event === GESTURE_RIGHT) {
-          this.state.input.offsetLeft++
+          this.state.input.offsetLeft+=this.state.offset*this.state.input.scale
           this.onTileUpdate()
         }
         return true
@@ -79,8 +105,8 @@ Page({
     })
 
     hmUI.createWidget(hmUI.widget.BUTTON, {
-      x: 480-100,
-      y: 480-150,
+      x: 480 - 100,
+      y: 480 - 150,
       w: 50,
       h: 50,
       text: 'c',
@@ -88,7 +114,7 @@ Page({
       normal_color: 0xffffffff,
       press_color: 0x00ffffff,
       click_func: (button_widget) => {
-        this.onCenter( 50.0928, 53.1881)
+        this.onCenter(50.0928, 53.1881)
       }
     })
 
@@ -102,10 +128,8 @@ Page({
       normal_color: 0xffffffff,
       press_color: 0x00ffffff,
       click_func: (button_widget) => {
-        if (this.state.input.scale) {
-          this.state.input.scale += 0.3
-          this.onTileUpdate()
-        }
+        this.updateScale(0.3)
+        this.onTileUpdate()
       }
     })
 
@@ -119,8 +143,11 @@ Page({
       normal_color: 0xffffffff,
       press_color: 0x00ffffff,
       click_func: (button_widget) => {
-        if (this.state.input.scale > 0.3) {
-          this.state.input.scale -= 0.3
+        if (this.state.input.scale > 0.3) {        
+          this.updateScale(-0.3)
+          // this.state.input.offsetLeft = (this.state.input.scale - 0.3)*(this.state.input.offsetLeft-240)/this.state.input.scale+240
+          // this.state.input.offsetTop = (this.state.input.scale - 0.3)*(this.state.input.offsetTop-240)/this.state.input.scale+240
+          // this.state.input.scale -= 0.3
           this.onTileUpdate()
         }
       }
@@ -129,7 +156,7 @@ Page({
     hmUI.createWidget(hmUI.widget.BUTTON, {
       x: 480 - 30,
       y: 225,
-      w: 30, 
+      w: 30,
       h: 30,
       text: '→',
       color: 0xff0000,
@@ -173,7 +200,7 @@ Page({
 
     hmUI.createWidget(hmUI.widget.BUTTON, {
       x: 225,
-      y: 480-30,
+      y: 480 - 30,
       w: 30,
       h: 30,
       text: '↓',
@@ -193,61 +220,54 @@ Page({
     //   line_width: 10
     // })
 
-    this.state.mapRenderer = new MapRenderer(this.state.canvas, 480, 480, this.state.offset)
+    this.state.mapRenderer = new MapRenderer(this.state.canvas, 480, 480)
 
     this.renderTile()
 
     this.state.geolocation.onChange(() => {
-      const {location} = this.state
- 
+      const { location } = this.state
+
       if (this.state.geolocation.getStatus() === 'A') {
         // location.x =  this.state.geolocation.getLongitude()
         // location.y = this.state.geolocation.getLatitude()  
-        location.status = this.state.geolocation.getStatus()
+        // location.status = this.state.geolocation.getStatus()
 
         if (this.state.firstLocation) {
           this.state.firstLocation = false
-          this.onCenter()
+          // this.onCenter()
           // this.renderLocation(location.x, location.y)
         }
       }
     })
   },
   onTimer() {
-    const {location} = this.state
+    const { location } = this.state
 
-    this.renderTile()
     this.renderLocation(location.x, location.y)
   },
   onTileUpdate() {
-    const {location} = this.state
+    const { location } = this.state
 
 
     this.renderTile()
     this.renderLocation(location.x, location.y)
   },
   renderTile() {
-    const {offsetLeft, offsetTop, scale} = this.state.input
-
-    // TODO check if the current position in bounds
-    // otherwise get a new tile for the currect position
-    // otherwise show current tile
+    const { offsetLeft, offsetTop, scale } = this.state.input
 
     this.state.mapRenderer.render(offsetTop, offsetLeft, scale)
-
-    // TODO check if other tiles should be displayed
   },
   renderLocation(x, y) {
-    const {grid} = this.state.map
-    const {offsetLeft, offsetTop, scale} = this.state.input
-    const {canvas, location, offset} = this.state
+    const { grid } = this.state.map
+    const { offsetLeft, offsetTop, scale } = this.state.input
+    const { canvas, location, offset } = this.state
 
     if (location.status != 'A') {
       logger.debug("skip location with status" + location.status);
       return
     }
 
-    this.state.text.setProperty(hmUI.prop.MORE, { 
+    this.state.text.setProperty(hmUI.prop.MORE, {
       text: location.x + " " + location.y
     })
 
@@ -258,43 +278,64 @@ Page({
     const latPosition = Math.abs(grid.top - y)
     const longPosition = Math.abs(grid.left - x)
 
-    x = this.state.tilesManager.getMapWidth(scale)*longPosition/grid.longWidth
-    y = this.state.tilesManager.getMapHeight(scale)*latPosition/grid.latHeight
+    x = this.state.tilesManager.getMapWidth(scale) * longPosition / grid.longWidth
+    y = this.state.tilesManager.getMapHeight(scale) * latPosition / grid.latHeight
 
     canvas.drawCircle({
-      center_x: x + offsetLeft*scale*offset,
-      center_y: y + offsetTop*scale*offset,
+      center_x: x + offsetLeft,
+      center_y: y + offsetTop,
       radius: 5,
       color: 0xff0000
     })
 
   },
   onCenter() {
-      const {grid} = this.state.map
-      const {scale} = this.state.input
-      const {location, offset} = this.state
-      var x = location.x
-      var y = location.y
-  
-      // TODO check if in bounds otherwise do nothing
+    const { grid } = this.state.map
+    const { scale } = this.state.input
+    const { location, offset } = this.state
+    var x = location.x
+    var y = location.y
 
-      if (location.status != 'A') {
-        logger.debug("skip location with status" + location.status);
-        return
-      }
-  
-      const latPosition = Math.abs(grid.top - y)
-      const longPosition = Math.abs(grid.left - x)
-  
-      x = this.state.tilesManager.getMapWidth(scale)*longPosition/grid.longWidth
-      y = this.state.tilesManager.getMapHeight(scale)*latPosition/grid.latHeight
+    // TODO check if in bounds otherwise do nothing
 
-      const newTop = y - 240
-      const newLeft = x - 240
-      this.state.input.offsetLeft = -Math.floor(newLeft/(offset*scale))
-      this.state.input.offsetTop = -Math.floor(newTop/(offset*scale))
+    if (location.status != 'A') {
+      logger.debug("skip location with status" + location.status);
+      return
+    }
 
-      this.onTileUpdate()
+    const latPosition = Math.abs(grid.top - y)
+    const longPosition = Math.abs(grid.left - x)
+
+    x = - this.state.tilesManager.getMapWidth(scale) * longPosition / grid.longWidth
+    y = - this.state.tilesManager.getMapHeight(scale) * latPosition / grid.latHeight
+
+    this.state.input.offsetLeft = x + 240
+    this.state.input.offsetTop =  y + 240
+
+    this.onTileUpdate()
+
+  },
+  updateScale(diff) {
+    if (this.state.input.offsetLeft > 0) {
+      // black space on left
+    } else if (this.state.input.offsetLeft + this.state.tilesManager.getMapWidth(this.state.input.scale) < 480){
+      // black space on right
+      this.state.input.offsetLeft += Math.floor(this.state.tilesManager.getMapWidth(this.state.input.scale) - this.state.tilesManager.getMapWidth(this.state.input.scale + diff))
+    } else {
+      this.state.input.offsetLeft = (this.state.input.scale + diff)*(this.state.input.offsetLeft -240)/this.state.input.scale + 240
+    }  
+
+    if (this.state.input.offsetTop > 0) { 
+      // black space on top
+    } else  if (this.state.input.offsetTop + this.state.tilesManager.getMapHeight(this.state.input.scale) < 480){
+      // black space on bottom
+      this.state.input.offsetTop += Math.floor(this.state.tilesManager.getMapHeight(this.state.input.scale) - this.state.tilesManager.getMapHeight(this.state.input.scale + diff))
+    } else {
+      this.state.input.offsetTop = (this.state.input.scale + diff)*(this.state.input.offsetTop -240)/this.state.input.scale + 240
+    }
+
+
+    this.state.input.scale += diff
 
   },
   onDestroy() {
