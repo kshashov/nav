@@ -8,7 +8,7 @@ export const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT } = getDeviceInfo();
 export const TEXT_STYLE = {
   text: "No GPS",
   x: px(42),
-  y: px(30),
+  y: px(100),
   w: DEVICE_WIDTH - px(42) * 2,
   h: px(30),
   color: 0xFF0000,

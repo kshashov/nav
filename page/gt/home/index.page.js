@@ -8,33 +8,29 @@ import MapRenderer from "./maprenderer";
 import TilesManager from "./tiles/tiles-manager";
 
 
+
 const logger = Logger.getLogger("helloworld");
 Page({
   state: {
+    isSimulator: true,
     input: {
       offsetTop: 0,
       offsetLeft: 0,
       scale: 1
     },
     location: {
-      // x: 50.0883,
-      // y: 53.186,
-      // x: 50.1261,
-      // y: 53.2031,
-      x: 50.09317,
-      y: 53.18978,
-      // x: 50.126901,
-      // y: 53.168001,
-      status: 'A'
+    },
+    settings: {
+      updateSeconds: 5
     },
     offset: 50,
-    firstLocation: true,
     canvas: null,
     geolocation: null,
     text: null,
     mapRenderer: null,
     tilesManager: new TilesManager()
   },
+
   onInit() {
     logger.debug("page onInit invoked");
 
@@ -44,11 +40,13 @@ Page({
     this.state.map = this.state.tilesManager.map;
 
     this.state.intervalId = setInterval(() => {
-      if (!this.state.firstLocation) {
+      if (this.state.location.status) {
+        // already got any locaction from geolocation
         this.onTimer()
       }
-    }, 5 * 1000)
+    }, this.state.settings.updateSeconds * 1000)
   },
+
   build() {
     logger.debug("page build invoked");
 
@@ -57,6 +55,16 @@ Page({
       y: 0,
       w: 480,
       h: 480
+    })
+
+    this.state.canvas.addEventListener(hmUI.event.MOVE_IN, (info) => {
+      this.updateScale(0.3)
+      this.onTileUpdate()
+    })
+
+    this.state.canvas.addEventListener(hmUI.event.MOVE_OUT, (info) => {
+      this.updateScale(-0.3)
+      this.onTileUpdate()
     })
 
     this.state.canvas.addEventListener(hmUI.event.MOVE, (info) => {
@@ -73,11 +81,14 @@ Page({
       this.state.input.pressY = info.y
     })
 
-    this.state.canvas.addEventListener(hmUI.event.CLICK_DOWN, (info) => {
-      this.state.input.pressX = info.x
-      this.state.input.pressY = info.y
-    })
-
+    // onKey({
+    //   callback: (key, keyEvent) => {
+    //     if (key) {
+    //       showToast({content: 'key ' + key})
+    //     }
+    //     return true
+    //   },
+    // })
 
     // this.state.canvas.addEventListener(hmUI.event.CLICK_UP, (info) => {
     //   this.state.input.offsetLeft+=Math.floor((info.x - this.state.input.pressX)) //diffX
@@ -104,6 +115,10 @@ Page({
       },
     })
 
+    if (this.state.isSimulator) {
+      this.buildSimulator()
+    }
+
     hmUI.createWidget(hmUI.widget.BUTTON, {
       x: 480 - 100,
       y: 480 - 150,
@@ -118,6 +133,53 @@ Page({
       }
     })
 
+    this.state.text = hmUI.createWidget(hmUI.widget.TEXT, TEXT_STYLE);
+
+    // canvas.setPaint({
+    //   color: 0xffffff,
+    //   line_width: 10
+    // })
+
+    this.state.mapRenderer = new MapRenderer(this.state.canvas, 480, 480)
+
+    this.renderTile()
+
+    this.state.geolocation.onChange(() => {
+      // if (this.state.geolocation.getStatus() === 'A') {
+      const firstLocation = this.state.location.status ? false: true
+
+      if (this.state.isSimulator) {
+        this.state.location = {
+            // x: 50.0883,
+            // y: 53.186,
+            // x: 50.1261,
+            // y: 53.2031,
+            // x: 50.126901,
+            // y: 53.168001,
+            //x: 50.09317,
+            //y: 53.18978,
+
+            x: 50.179878333,
+            y: 53.208288333,
+            status: 'A'
+          }
+      } else {
+        this.state.location = {
+            x: this.state.geolocation.getLongitude(),
+            y: this.state.geolocation.getLatitude(),
+            status: this.state.geolocation.getStatus()
+          }
+      }
+
+
+      if (firstLocation || (this.state.geolocation.getStatus() === 'A')) {
+        this.onCenter()
+        this.renderLocation()
+      }
+    })
+  },
+
+  buildSimulator() {
     hmUI.createWidget(hmUI.widget.BUTTON, {
       x: 50,
       y: 100,
@@ -145,9 +207,6 @@ Page({
       click_func: (button_widget) => {
         if (this.state.input.scale > 0.3) {        
           this.updateScale(-0.3)
-          // this.state.input.offsetLeft = (this.state.input.scale - 0.3)*(this.state.input.offsetLeft-240)/this.state.input.scale+240
-          // this.state.input.offsetTop = (this.state.input.scale - 0.3)*(this.state.input.offsetTop-240)/this.state.input.scale+240
-          // this.state.input.scale -= 0.3
           this.onTileUpdate()
         }
       }
@@ -212,34 +271,8 @@ Page({
         this.onTileUpdate()
       }
     })
-
-    this.state.text = hmUI.createWidget(hmUI.widget.TEXT, TEXT_STYLE);
-
-    // canvas.setPaint({
-    //   color: 0xffffff,
-    //   line_width: 10
-    // })
-
-    this.state.mapRenderer = new MapRenderer(this.state.canvas, 480, 480)
-
-    this.renderTile()
-
-    this.state.geolocation.onChange(() => {
-      const { location } = this.state
-
-      if (this.state.geolocation.getStatus() === 'A') {
-        // location.x =  this.state.geolocation.getLongitude()
-        // location.y = this.state.geolocation.getLatitude()  
-        // location.status = this.state.geolocation.getStatus()
-
-        if (this.state.firstLocation) {
-          this.state.firstLocation = false
-          // this.onCenter()
-          // this.renderLocation(location.x, location.y)
-        }
-      }
-    })
   },
+
   onTimer() {
     const { location } = this.state
 
@@ -257,19 +290,24 @@ Page({
 
     this.state.mapRenderer.render(offsetTop, offsetLeft, scale)
   },
-  renderLocation(x, y) {
+  renderLocation() {
     const { grid } = this.state.map
     const { offsetLeft, offsetTop, scale } = this.state.input
-    const { canvas, location, offset } = this.state
+    const { canvas, location} = this.state
+    var x = location.x
+    var y = location.y
 
-    if (location.status != 'A') {
-      logger.debug("skip location with status" + location.status);
+    if (!location.status)  {
+      // Do not render until any location is set
+      logger.debug("skip location with null status");
       return
     }
 
-    this.state.text.setProperty(hmUI.prop.MORE, {
-      text: location.x + " " + location.y
-    })
+    if (location.status != 'A') {
+      this.setStatusText("No GPS")
+    } else {
+      this.setStatusText(x + " " + y)
+    }
 
     // TODO check if the current position in bounds 
     // otherwise if user did not move map away - get a new tile for the current position
@@ -285,29 +323,34 @@ Page({
       center_x: x + offsetLeft,
       center_y: y + offsetTop,
       radius: 5,
-      color: 0xff0000
+      color:  0xff0000 //location.status != 'A' ? 0xcccccc : 0xff0000
     })
 
   },
   onCenter() {
     const { grid } = this.state.map
     const { scale } = this.state.input
-    const { location, offset } = this.state
+    const { location, tilesManager } = this.state
     var x = location.x
     var y = location.y
 
-    // TODO check if in bounds otherwise do nothing
 
-    if (location.status != 'A') {
-      logger.debug("skip location with status" + location.status);
+    if (!location.status) {
+      logger.debug("skip location with null status ");
       return
     }
 
     const latPosition = Math.abs(grid.top - y)
     const longPosition = Math.abs(grid.left - x)
 
-    x = - this.state.tilesManager.getMapWidth(scale) * longPosition / grid.longWidth
-    y = - this.state.tilesManager.getMapHeight(scale) * latPosition / grid.latHeight
+    // if ((latPosition > grid.latHeight) || (longPosition > grid.longPosition)) {
+    //   // ? do nothing if outside grid bounds
+    //   logger.debug("skip location outside grid bounds " + x + " " + y);
+    //   return
+    // }
+
+    x = - tilesManager.getMapWidth(scale) * longPosition / grid.longWidth
+    y = - tilesManager.getMapHeight(scale) * latPosition / grid.latHeight
 
     this.state.input.offsetLeft = x + 240
     this.state.input.offsetTop =  y + 240
@@ -334,9 +377,12 @@ Page({
       this.state.input.offsetTop = (this.state.input.scale + diff)*(this.state.input.offsetTop -240)/this.state.input.scale + 240
     }
 
-
     this.state.input.scale += diff
-
+  },
+  setStatusText(text){
+    this.state.text.setProperty(hmUI.prop.MORE, {
+      text: text
+    })
   },
   onDestroy() {
     logger.debug("page onDestroy invoked");
