@@ -6,7 +6,7 @@ export default class MapLoader {
                 top: 53.249900,
                 left: 50.062100,
                 bottom: 53.149900,
-                right: 50.202100,
+                right: 50.212100,
                 width: 2385,
                 height: 2650,
                 rows: 10,

@@ -69,7 +69,7 @@ export default class TilesManager {
 
 
         let column = Math.floor(windowX / this.getTileWidth(scale))
-        let row = Math.floor(windowY / this.getTileWidth(scale))
+        let row = Math.floor(windowY / this.getTileHeight(scale))
 
         // showToast({content: 'no tiles for ' + x + " " + y});
 
@@ -80,7 +80,7 @@ export default class TilesManager {
         return {
             column: column,
             row: row,
-            image: "small/map"+row+"_"+column+".png"
+            image: this.map.key + "/map" + row + "_" + column + ".png"
         }
     }
 

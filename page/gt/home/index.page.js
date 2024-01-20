@@ -99,17 +99,17 @@ Page({
     onGesture({
       callback: (event) => {
         if (event === GESTURE_UP) {
-          this.state.input.offsetTop-=this.state.offset*this.state.input.scale
-          this.onTileUpdate()
+          // this.state.input.offsetTop-=this.state.offset*this.state.input.scale
+          // this.onTileUpdate()
         } else if (event === GESTURE_DOWN) {
-          this.state.input.offsetTop+=this.state.offset*this.state.input.scale
-          this.onTileUpdate()
+          // this.state.input.offsetTop+=this.state.offset*this.state.input.scale
+          // this.onTileUpdate()
         } else if (event === GESTURE_LEFT) {
-          this.state.input.offsetLeft-=this.state.offset*this.state.input.scale
-          this.onTileUpdate()
+          // this.state.input.offsetLeft-=this.state.offset*this.state.input.scale
+          // this.onTileUpdate()
         } else if (event === GESTURE_RIGHT) {
-          this.state.input.offsetLeft+=this.state.offset*this.state.input.scale
-          this.onTileUpdate()
+          // this.state.input.offsetLeft+=this.state.offset*this.state.input.scale
+          // this.onTileUpdate()
         }
         return true
       },
@@ -172,7 +172,7 @@ Page({
       }
 
 
-      if (firstLocation || (this.state.geolocation.getStatus() === 'A')) {
+      if (firstLocation && (this.state.geolocation.getStatus() === 'A')) {
         this.onCenter()
         this.renderLocation()
       }
@@ -293,7 +293,7 @@ Page({
   renderLocation() {
     const { grid } = this.state.map
     const { offsetLeft, offsetTop, scale } = this.state.input
-    const { canvas, location} = this.state
+    const { canvas, location, tilesManager} = this.state
     var x = location.x
     var y = location.y
 
@@ -316,8 +316,8 @@ Page({
     const latPosition = Math.abs(grid.top - y)
     const longPosition = Math.abs(grid.left - x)
 
-    x = this.state.tilesManager.getMapWidth(scale) * longPosition / grid.longWidth
-    y = this.state.tilesManager.getMapHeight(scale) * latPosition / grid.latHeight
+    x = tilesManager.getMapWidth(scale) * longPosition * 1.0 / grid.longWidth
+    y = tilesManager.getMapHeight(scale) * latPosition * 1.0 / grid.latHeight
 
     canvas.drawCircle({
       center_x: x + offsetLeft,
