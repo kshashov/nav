@@ -32,8 +32,12 @@
           "pages": [
             "page/gt/home/index.page"
           ]
+        },
+        "setting": {
+          "path": "settings/index"
         }
       },
+
       "platforms": [
         {
           "st": "r"

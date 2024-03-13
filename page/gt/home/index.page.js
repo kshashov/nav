@@ -7,8 +7,6 @@ import { getDeviceInfo } from "@zos/device";
 import MapRenderer from "./maprenderer";
 import TilesManager from "./tiles/tiles-manager";
 
-
-
 const logger = Logger.getLogger("helloworld");
 Page({
   state: {
